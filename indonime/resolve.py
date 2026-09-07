@@ -41,8 +41,15 @@ def _score(a, b):
   inter = sa & sb
   if not inter:
     return 0.0
-  jaccard = len(inter) / len(sa | sb)
-  return jaccard + 0.3 * (len(sa - sb) == 0)  # bonus: seluruh token judul pendek cocok
+  # F1 dari recall (token query kecover?) + precision (kandidat minim
+  # embel-embel?). Jaccard + bonus lama meloloskan "Bleach" vs sekuel
+  # "Bleach: Sennen Kessen-hen ..." (0.47 >= threshold) → judul salah
+  # ke-resolve otomatis. F1 menekan itu (<0.45) → resolve kosong → GUI
+  # nawarin kandidat manual. ponytail: alias English→romaji
+  # (Thousand-Year Blood War → Sennen Kessen-hen) belum ditangani.
+  recall = len(inter) / len(sa)
+  precision = len(inter) / len(sb)
+  return 2 * recall * precision / (recall + precision)
 
 
 def _search_all(plugin_list, title):
